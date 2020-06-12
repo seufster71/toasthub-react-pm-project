@@ -92,7 +92,6 @@ export default function usersReducer(state = {}, action) {
 							} else {
 								inputFields[prefForms.PM_PROJECT_FORM[i].name] = result;
 							}
-							
 						}
 					}
 				}
@@ -124,6 +123,20 @@ export default function usersReducer(state = {}, action) {
 		}
 		case 'PM_PROJECT_ORDERBY': { 
 			return reducerUtils.updateOrderBy(state,action);
+		}
+		case 'PM_PROJECT_ADD_PARENT': {
+			if (action.parent != null) {
+				return Object.assign({}, state, {
+					parent: action.parent
+				});
+			} else {
+		        return state;
+		    }
+		}
+		case 'PM_PROJECT_CLEAR_PARENT': {
+			return Object.assign({}, state, {
+				parent: null
+			});
 		}
 		default:
 			return state;

@@ -33,7 +33,11 @@ class PMProjectContainer extends Component {
 	}
 
 	componentDidMount() {
-		this.props.actions.init();
+		if (this.props.history.location.state != null && this.props.history.location.state.parent != null) {
+			this.props.actions.init(this.props.history.location.state.parent);
+		} else {
+			this.props.actions.init();
+		}
 	}
 
 	onListLimitChange = (fieldName, event) => {
@@ -163,7 +167,7 @@ class PMProjectContainer extends Component {
 	}
 	
 	onOption = (code,item) => {
-		fuLogger.log({level:'TRACE',loc:'ProductContainer::onOption',msg:" code "+code});
+		fuLogger.log({level:'TRACE',loc:'ProjectContainer::onOption',msg:" code "+code});
 		switch(code) {
 			case 'MODIFY': {
 				this.onModify(item);
@@ -177,8 +181,23 @@ class PMProjectContainer extends Component {
 				this.onDelete(item);
 				break;
 			}
+			case 'RELEASE': {
+				this.props.history.push({pathname:'/pm-release',state:{parent:item,parentType:"PROJECT"}});
+				break;
+			}
+			case 'BACKLOG': {
+				this.props.history.push({pathname:'/pm-backlog',state:{parent:item,parentType:"PROJECT"}});
+				break;
+			}
+			case 'DEFECT': {
+				this.props.history.push({pathname:'/pm-defect',state:{parent:item,parentType:"PROJECT"}});
+				break;
+			}
+			case 'ENHANCEMENT': {
+				this.props.history.push({pathname:'/pm-enhancement',state:{parent:item,parentType:"PROJECT"}});
+				break;
+			}
 		}
-			//this.props.history.push({pathname:'/admin-roles',state:{parent:item}});
 	}
 	
 	closeModal = () => {
@@ -201,49 +220,49 @@ class PMProjectContainer extends Component {
 	}
 	
 	onBlur = (field) => {
-		return (event) => {
-			fuLogger.log({level:'TRACE',loc:'ProjectContainer::onBlur',msg:field.name});
-			let fieldName = field.name;
-			// get field and check what to do
-			if (field.optionalParams != ""){
-				let optionalParams = JSON.parse(field.optionalParams);
-				if (optionalParams.onBlur != null) {
-					if (optionalParams.onBlur.validation != null && optionalParams.onBlur.validation == "matchField") {
-						if (field.validation != "") {
-							let validation = JSON.parse(field.validation);
-							if (validation[optionalParams.onBlur.validation] != null && validation[optionalParams.onBlur.validation].id != null){
-								if (this.props.pmproject.inputFields[validation[optionalParams.onBlur.validation].id] == this.props.pmproject.inputFields[fieldName]) {
-									if (validation[optionalParams.onBlur.validation].successMsg != null) {
-										let successMap = this.state.successes;
-										if (successMap == null){
-											successMap = {};
-										}
-										successMap[fieldName] = validation[optionalParams.onBlur.validation].successMsg;
-										this.setState({successes:successMap, errors:null});
+		fuLogger.log({level:'TRACE',loc:'ProjectContainer::onBlur',msg:field.name});
+		let fieldName = field.name;
+		// get field and check what to do
+		if (field.optionalParams != ""){
+			let optionalParams = JSON.parse(field.optionalParams);
+			if (optionalParams.onBlur != null) {
+				if (optionalParams.onBlur.validation != null && optionalParams.onBlur.validation == "matchField") {
+					if (field.validation != "") {
+						let validation = JSON.parse(field.validation);
+						if (validation[optionalParams.onBlur.validation] != null && validation[optionalParams.onBlur.validation].id != null){
+							if (this.props.pmproject.inputFields[validation[optionalParams.onBlur.validation].id] == this.props.pmproject.inputFields[fieldName]) {
+								if (validation[optionalParams.onBlur.validation].successMsg != null) {
+									let successMap = this.state.successes;
+									if (successMap == null){
+										successMap = {};
 									}
-								} else {
-									if (validation[optionalParams.onBlur.validation].failMsg != null) {
-										let errorMap = this.state.errors;
-										if (errorMap == null){
-											errorMap = {};
-										}
-										errorMap[fieldName] = validation[optionalParams.onBlur.validation].failMsg;
-										this.setState({errors:errorMap, successes:null});
+									successMap[fieldName] = validation[optionalParams.onBlur.validation].successMsg;
+									this.setState({successes:successMap, errors:null});
+								}
+							} else {
+								if (validation[optionalParams.onBlur.validation].failMsg != null) {
+									let errorMap = this.state.errors;
+									if (errorMap == null){
+										errorMap = {};
 									}
+									errorMap[fieldName] = validation[optionalParams.onBlur.validation].failMsg;
+									this.setState({errors:errorMap, successes:null});
 								}
 							}
 						}
-					} else if (optionalParams.onBlur.func != null) {
-						if (optionalParams.onBlur.func == "clearVerifyPassword"){
-							this.clearVerifyPassword();
-						}
 					}
+				} else if (optionalParams.onBlur.func != null) {
+					
 				}
 			}
+		}
 			
-		};
 	}
 	
+	goBack = () => {
+		fuLogger.log({level:'TRACE',loc:'ProjectContainer::goBack',msg:"test"});
+		this.props.history.goBack();
+	}
 
 	render() {
 		fuLogger.log({level:'TRACE',loc:'ProjectContainer::render',msg:"Hi there"});
@@ -272,10 +291,10 @@ class PMProjectContainer extends Component {
 				onSearchClick={this.onSearchClick}
 				onPaginationClick={this.onPaginationClick}
 				onOrderBy={this.onOrderBy}
-				openDeleteModal={this.openDeleteModal}
 				closeModal={this.closeModal}
 				onOption={this.onOption}
 				inputChange={this.inputChange}
+				goBack={this.goBack}
 				session={this.props.session}
 				/>
 			);

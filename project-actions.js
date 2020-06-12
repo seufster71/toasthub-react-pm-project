@@ -21,13 +21,19 @@ import actionUtils from '../../core/common/action-utils';
 
 
 // thunks
-export function init() {
+export function init(parent) {
   return function(dispatch) {
     let requestParams = {};
     requestParams.action = "INIT";
     requestParams.service = "PM_PROJECT_SVC";
     requestParams.prefTextKeys = new Array("PM_PROJECT_PAGE");
     requestParams.prefLabelKeys = new Array("PM_PROJECT_PAGE");
+    if (parent != null) {
+		requestParams.productId = parent.id;
+		dispatch({type:"PM_PROJECT_ADD_PARENT", parent});
+	} else {
+		dispatch({type:"PM_PROJECT_CLEAR_PARENT"});
+	}
     let params = {};
     params.requestParams = requestParams;
     params.URI = '/api/member/callService';
@@ -69,6 +75,9 @@ export function list({state,listStart,listLimit,searchCriteria,orderCriteria,inf
 			requestParams.orderCriteria = orderCriteria;
 		} else {
 			requestParams.orderCriteria = state.orderCriteria;
+		}
+		if (state.parent != null) {
+			requestParams.productId = state.parent.id;
 		}
 		let userPrefChange = {"page":"users","orderCriteria":requestParams.orderCriteria,"listStart":requestParams.listStart,"listLimit":requestParams.listLimit};
 		dispatch({type:"PM_PROJECT_PREF_CHANGE", userPrefChange});
@@ -112,7 +121,9 @@ export function saveItem({state}) {
 	    requestParams.action = "SAVE";
 	    requestParams.service = "PM_PROJECT_SVC";
 	    requestParams.inputFields = state.inputFields;
-
+	    if (state.parent != null) {
+	    	requestParams.productId = state.parent.id;
+	    }
 	    let params = {};
 	    params.requestParams = requestParams;
 	    params.URI = '/api/member/callService';
