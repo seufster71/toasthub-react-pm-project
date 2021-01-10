@@ -31,8 +31,15 @@ export default function usersReducer(state = {}, action) {
 					listStart: reducerUtils.getListStart(action),
 					orderCriteria: [{'orderColumn':'PM_PROJECT_TABLE_NAME','orderDir':'ASC'}],
     				searchCriteria: [{'searchValue':'','searchColumn':'PM_PROJECT_TABLE_NAME'}],
+    				paginationSegment: 1,
 					selected: null,
-					isModifyOpen: false
+					isModifyOpen: false,
+					pageName:"PROJECT",
+					isDeleteModalOpen: false,
+					errors:null, 
+					warns:null, 
+					successes:null,
+					searchValue:""
 				});
 			} else {
 				return state;
@@ -45,8 +52,13 @@ export default function usersReducer(state = {}, action) {
 					items: reducerUtils.getItems(action),
 					listLimit: reducerUtils.getListLimit(action),
 					listStart: reducerUtils.getListStart(action),
+					paginationSegment: action.paginationSegment,
 					selected: null,
-					isModifyOpen: false
+					isModifyOpen: false,
+					isDeleteModalOpen: false,
+					errors:null, 
+					warns:null, 
+					successes:null
 				});
 			} else {
 				return state;
@@ -140,6 +152,22 @@ export default function usersReducer(state = {}, action) {
 		case 'PM_PROJECT_CLEAR_PARENT': {
 			return Object.assign({}, state, {
 				parent: null
+			});
+		}
+		case 'PM_PROJECT_SET_ERRORS': {
+			return Object.assign({}, state, {
+				errors: action.errors
+			});
+		}
+		case 'PM_PROJECT_CLOSE_DELETE_MODAL': {
+			return Object.assign({}, state, {
+				isDeleteModalOpen: false
+			});
+		}
+		case 'PM_PROJECT_OPEN_DELETE_MODAL': {
+			return Object.assign({}, state, {
+				isDeleteModalOpen: true,
+				selected: action.item
 			});
 		}
 		default:

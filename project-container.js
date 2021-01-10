@@ -22,14 +22,11 @@ import * as projectActions from './project-actions';
 import fuLogger from '../../core/common/fu-logger';
 import ProjectView from '../../memberView/pm_project/project-view';
 import ProjectModifyView from '../../memberView/pm_project/project-modify-view';
-import utils from '../../core/common/utils';
-import moment from 'moment';
+import BaseContainer from '../../core/container/base-container';
 
-
-class PMProjectContainer extends Component {
+class PMProjectContainer extends BaseContainer {
 	constructor(props) {
 		super(props);
-		this.state = {pageName:"PM_PROJECT",isDeleteModalOpen: false, errors:null, warns:null, successes:null};
 	}
 
 	componentDidMount() {
@@ -40,147 +37,21 @@ class PMProjectContainer extends Component {
 		}
 	}
 
-	onListLimitChange = (fieldName, event) => {
-		let value = 20;
-		if (this.props.codeType === 'NATIVE') {
-			value = event.nativeEvent.text;
-		} else {
-			value = event.target.value;
-		}
-
-		let listLimit = parseInt(value);
-		this.props.actions.listLimit({state:this.props.pmproject,listLimit});
-	}
-
-	onPaginationClick = (value) => {
-		fuLogger.log({level:'TRACE',loc:'ProjectContainer::onPaginationClick',msg:"fieldName "+ value});
-		let listStart = this.props.pmproject.listStart;
-		let segmentValue = 1;
-		let oldValue = 1;
-		if (this.state["PM_PROJECT_PAGINATION"] != null && this.state["PM_PROJECT_PAGINATION"] != ""){
-			oldValue = this.state["PM_PROJECT_PAGINATION"];
-		}
-		if (value === "prev") {
-			segmentValue = oldValue - 1;
-		} else if (value === "next") {
-			segmentValue = oldValue + 1;
-		} else {
-			segmentValue = value;
-		}
-		listStart = ((segmentValue - 1) * this.props.pmproject.listLimit);
-		this.setState({"PM_PROJECT_PAGINATION":segmentValue});
-		
-		this.props.actions.list({state:this.props.pmproject,listStart});
-	}
-
-	onSearchChange = (fieldName, event) => {
-		if (event.type === 'keypress') {
-			if (event.key === 'Enter') {
-				this.onSearchClick(fieldName,event);
-			}
-		} else {
-			if (this.props.codeType === 'NATIVE') {
-				this.setState({[fieldName]:event.nativeEvent.text});
-			} else {
-				this.setState({[fieldName]:event.target.value});
-			}
-		}
+	getState = () => {
+		return this.props.pmproject;
 	}
 	
-	onSearchClick = (fieldName,event) => {
-		let searchCriteria = [];
-		if (fieldName === 'PM_PROJECT-SEARCHBY') {
-			if (event != null) {
-				for (let o = 0; o < event.length; o++) {
-					let option = {};
-					option.searchValue = this.state['PM_PROJECT-SEARCH'];
-					option.searchColumn = event[o].value;
-					searchCriteria.push(option);
-				}
-			}
-		} else {
-			for (let i = 0; i < this.props.pmproject.searchCriteria.length; i++) {
-				let option = {};
-				option.searchValue = this.state['PM_PROJECT-SEARCH'];
-				option.searchColumn = this.props.pmproject.searchCriteria[i].searchColumn;
-				searchCriteria.push(option);
-			}
-		}
-
-		this.props.actions.search({state:this.props.pmproject,searchCriteria});
-	}
-
-	onOrderBy = (selectedOption, event) => {
-		fuLogger.log({level:'TRACE',loc:'ProjectContainer::onOrderBy',msg:"id " + selectedOption});
-		let orderCriteria = [];
-		if (event != null) {
-			for (let o = 0; o < event.length; o++) {
-				let option = {};
-				if (event[o].label.includes("ASC")) {
-					option.orderColumn = event[o].value;
-					option.orderDir = "ASC";
-				} else if (event[o].label.includes("DESC")){
-					option.orderColumn = event[o].value;
-					option.orderDir = "DESC";
-				} else {
-					option.orderColumn = event[o].value;
-				}
-				orderCriteria.push(option);
-			}
-		} else {
-			let option = {orderColumn:"PM_PROJECT_TABLE_NAME",orderDir:"ASC"};
-			orderCriteria.push(option);
-		}
-		this.props.actions.orderBy({state:this.props.pmproject,orderCriteria});
-	}
-	
-	onSave = () => {
-		fuLogger.log({level:'TRACE',loc:'ProjectContainer::onSave',msg:"test"});
-		let errors = utils.validateFormFields(this.props.pmproject.prefForms.PM_PROJECT_FORM,this.props.pmproject.inputFields);
-		
-		if (errors.isValid){
-			this.props.actions.saveItem({state:this.props.pmproject});
-		} else {
-			this.setState({errors:errors.errorMap});
-		}
-	}
-	
-	onModify = (item) => {
-		let id = null;
-		if (item != null && item.id != null) {
-			id = item.id;
-		}
-		fuLogger.log({level:'TRACE',loc:'ProjectContainer::onModify',msg:"test"+id});
-		this.props.actions.modifyItem({id,appPrefs:this.props.appPrefs});
-	}
-	
-	onDelete = (item) => {
-		fuLogger.log({level:'TRACE',loc:'ProjectContainer::onDelete',msg:"test"});
-		this.setState({isDeleteModalOpen:false});
-		if (item != null && item.id != "") {
-			this.props.actions.deleteItem({state:this.props.pmproject,id:item.id});
-		}
-	}
-	
-	openDeleteModal = (item) => {
-		this.setState({isDeleteModalOpen:true,selected:item});
+	getForm = () => {
+		return "PM_PROJECT_FORM";
 	}
 	
 	onOption = (code,item) => {
 		fuLogger.log({level:'TRACE',loc:'ProjectContainer::onOption',msg:" code "+code});
+		if (this.onOptionBase(code,item)) {
+			return;
+		}
+		
 		switch(code) {
-			case 'MODIFY': {
-				this.onModify(item);
-				break;
-			}
-			case 'DELETE': {
-				this.openDeleteModal(item);
-				break;
-			}
-			case 'DELETEFINAL': {
-				this.onDelete(item);
-				break;
-			}
 			case 'RELEASE': {
 				this.props.history.push({pathname:'/pm-release',state:{parent:item,parentType:"PROJECT"}});
 				break;
@@ -206,19 +77,6 @@ class PMProjectContainer extends Component {
 				break;
 			}
 		}
-	}
-	
-	closeModal = () => {
-		this.setState({isDeleteModalOpen:false,errors:null,warns:null});
-	}
-	
-	onCancel = () => {
-		fuLogger.log({level:'TRACE',loc:'ProjectContainer::onCancel',msg:"test"});
-		this.props.actions.list({state:this.props.pmproject});
-	}
-	
-	inputChange = (type,field,value,event) => {
-		utils.inputChange({type,props:this.props,field,value,event});
 	}
 	
 	onBlur = (field) => {
@@ -260,32 +118,22 @@ class PMProjectContainer extends Component {
 		}
 			
 	}
-	
-	goBack = () => {
-		fuLogger.log({level:'TRACE',loc:'ProjectContainer::goBack',msg:"test"});
-		this.props.history.goBack();
-	}
 
 	render() {
 		fuLogger.log({level:'TRACE',loc:'ProjectContainer::render',msg:"Hi there"});
 		if (this.props.pmproject.isModifyOpen) {
 			return (
 				<ProjectModifyView
-				containerState={this.state}
-				item={this.props.pmproject.selected}
-				inputFields={this.props.pmproject.inputFields}
+				itemState={this.props.pmproject}
 				appPrefs={this.props.appPrefs}
-				itemPrefForms={this.props.pmproject.prefForms}
 				onSave={this.onSave}
 				onCancel={this.onCancel}
-				onReturn={this.onCancel}
 				inputChange={this.inputChange}
 				onBlur={this.onBlur}/>
 			);
 		} else if (this.props.pmproject.items != null) {
 			return (
 				<ProjectView
-				containerState={this.state}
 				itemState={this.props.pmproject}
 				appPrefs={this.props.appPrefs}
 				onListLimitChange={this.onListLimitChange}
